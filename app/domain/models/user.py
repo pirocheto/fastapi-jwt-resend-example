@@ -5,8 +5,8 @@ from datetime import UTC, datetime
 from app.domain.exceptions.auth_exceptions import IncorrectPasswordError, InvalidCredentialsError, UserNotVerifiedError
 from app.domain.models.base import DomainModel
 from app.infrastructure.db.models import UserORM
+from app.infrastructure.mappers import mapper, sync
 from app.infrastructure.security import hashing
-from app.mappers import mapper
 
 
 @dataclass
@@ -61,3 +61,7 @@ class User(DomainModel):
         """Create a domain model from an ORM model."""
 
         return mapper.orm_to_domain(obj_orm, cls)
+
+    def sync(self, orm_obj: UserORM) -> "User":
+        """Synchronize the domain model with the ORM model."""
+        return sync.domain_from_orm(self, orm_obj)

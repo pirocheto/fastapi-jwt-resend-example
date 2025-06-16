@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from app.config import settings
-from app.infrastructure.email.providers.resend_provider import ResendEmailProvider
+from app.infrastructure.email import mailer
 from app.infrastructure.email.template_env import envs
 
 base_dir = Path(settings.app_dir)
@@ -19,12 +19,8 @@ class EmailData:
 class EmailService:
     """Service for sending emails using various providers."""
 
-    def __init__(self) -> None:
-        self.provider = ResendEmailProvider()
-        self.envs = envs
-
     def _render_email_template(self, template_name: str, context: dict[str, Any], template_type: str) -> str:
-        env = self.envs[template_type]
+        env = envs[template_type]
         template = env.get_template(template_name)
         return template.render(context)
 
@@ -47,7 +43,7 @@ class EmailService:
         }
 
         email_data = self._generate_email("verify_email", context, subject)
-        self.provider.send_email(email_to, email_data.subject, email_data.html_content, email_data.raw_content)
+        mailer.send_email(email_to, email_data.subject, email_data.html_content, email_data.raw_content)
 
     def send_password_reset_email(self, email_to: str, token: str) -> None:
         """Send password reset link to the user."""
@@ -62,4 +58,4 @@ class EmailService:
         }
 
         email_data = self._generate_email("reset_password", context, subject)
-        self.provider.send_email(email_to, email_data.subject, email_data.html_content, email_data.raw_content)
+        mailer.send_email(email_to, email_data.subject, email_data.html_content, email_data.raw_content)

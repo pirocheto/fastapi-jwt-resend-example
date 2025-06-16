@@ -1,12 +1,18 @@
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
+from app.config import settings
 from app.domain.exceptions.auth_exceptions import InvalidVerificationTokenError
 from app.domain.models.base import DomainModel
-from app.infrastructure.db.models import VerificationTokenORM, default_verif_token_expires_at
+from app.infrastructure.db.models import VerificationTokenORM
+from app.infrastructure.mappers import mapper, sync
 from app.infrastructure.security import hashing, tokens
-from app.mappers import mapper
+
+
+def default_verif_token_expires_at() -> datetime:
+    """Default expiration time for verification tokens."""
+    return datetime.now(UTC) + timedelta(hours=settings.VERIFICATION_TOKEN_EXPIRE_HOURS)
 
 
 @dataclass
@@ -18,8 +24,7 @@ class VerificationToken(DomainModel):
     _token: str | None = field(default=None, repr=False)
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    expired_at: datetime = field(default_factory=default_verif_token_expires_at)
-    updated_at: datetime | None = None
+    expires_at: datetime = field(default_factory=default_verif_token_expires_at)
 
     @property
     def token(self) -> str:
@@ -54,7 +59,7 @@ class VerificationToken(DomainModel):
     def verify(self) -> "VerificationToken":
         """Verify the integrity of the verification token."""
 
-        if self.expired_at < datetime.now(UTC):
+        if self.expires_at < datetime.now(UTC):
             raise InvalidVerificationTokenError()
         return self
 
@@ -68,3 +73,7 @@ class VerificationToken(DomainModel):
         """Create a domain model from an ORM model."""
 
         return mapper.orm_to_domain(obj_orm, cls)
+
+    def sync(self, orm_obj: VerificationTokenORM) -> "VerificationToken":
+        """Synchronize the domain model with the ORM model."""
+        return sync.domain_from_orm(self, orm_obj)

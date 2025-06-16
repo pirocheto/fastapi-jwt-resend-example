@@ -1,12 +1,18 @@
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
+from app.config import settings
 from app.domain.exceptions.auth_exceptions import InvalidRefreshTokenError
 from app.domain.models.base import DomainModel
-from app.infrastructure.db.models import PasswordResetTokenORM, default_password_reset_token_expires_at
+from app.infrastructure.db.models import PasswordResetTokenORM
+from app.infrastructure.mappers import mapper, sync
 from app.infrastructure.security import hashing, tokens
-from app.mappers import mapper
+
+
+def default_password_reset_token_expires_at() -> datetime:
+    """Default expiration time for password reset tokens."""
+    return datetime.now(UTC) + timedelta(minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_HOURS)
 
 
 @dataclass
@@ -18,8 +24,7 @@ class PasswordResetToken(DomainModel):
     _token: str | None = field(default=None, repr=False)
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    expired_at: datetime = field(default_factory=lambda: default_password_reset_token_expires_at())
-    updated_at: datetime | None = field(default=None)
+    expires_at: datetime = field(default_factory=lambda: default_password_reset_token_expires_at())
 
     @property
     def token(self) -> str:
@@ -52,7 +57,7 @@ class PasswordResetToken(DomainModel):
 
     def verify(self) -> "PasswordResetToken":
         """Verify the integrity of the password reset token."""
-        if self.expired_at < datetime.now(UTC):
+        if self.expires_at < datetime.now(UTC):
             raise InvalidRefreshTokenError()
         return self
 
@@ -64,3 +69,7 @@ class PasswordResetToken(DomainModel):
     def from_orm(cls, orm_obj: PasswordResetTokenORM) -> "PasswordResetToken":
         """Convert an ORM model to the domain model."""
         return mapper.orm_to_domain(orm_obj, cls)
+
+    def sync(self, orm_obj: PasswordResetTokenORM) -> "PasswordResetToken":
+        """Synchronize the domain model with the ORM model."""
+        return sync.domain_from_orm(self, orm_obj)

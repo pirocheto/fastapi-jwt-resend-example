@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.models import User
 from app.domain.services.auth_service import AuthService
-from app.domain.services.email_verification_service import EmailVerificationService
+from app.domain.services.email_verif_service import EmailVerificationService
 from app.domain.services.password_service import PasswordService
 from app.domain.services.registration_service import RegistrationService
 from app.domain.services.user_service import UserService

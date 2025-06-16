@@ -48,7 +48,6 @@ def decode_jwt_token(token: str) -> dict[str, Any] | None:
             audience=settings.FRONTEND_HOST,
         )
         return dict(decoded_token)
-
     except (ExpiredSignatureError, InvalidTokenError):
         return None
 

@@ -41,7 +41,8 @@ class UserFactory:
         if commit:
             try:
                 await self.session.commit()
-            except IntegrityError:
+            except IntegrityError as e:
+                print(f"IntegrityError: {e}")
                 await self.session.rollback()
                 raise UserAlreadyExistsError()
         return user

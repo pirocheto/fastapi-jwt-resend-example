@@ -10,10 +10,7 @@ from app.infrastructure.repositories import EmailVerifTokenRepo, UserRepo
 class EmailVerificationService:
     """Service for handling email verification functionality."""
 
-    def __init__(
-        self,
-        session: AsyncSession,
-    ):
+    def __init__(self, session: AsyncSession):
         self.session = session
 
         # Initialize repositories

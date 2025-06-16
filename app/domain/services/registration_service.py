@@ -12,6 +12,7 @@ class RegistrationService:
     """Service for handling user registration functionality."""
 
     def __init__(self, session: AsyncSession):
+        # Initialize repositories
         self.user_repo = UserRepo(session)
         self.verif_token_repo = EmailVerifTokenRepo(session)
 
